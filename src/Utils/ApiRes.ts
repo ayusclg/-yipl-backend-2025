@@ -1,4 +1,4 @@
-class apiResponse {
+export class apiResponse {
   statusCode: number;
   success: boolean;
   data: Record<string, any>;
