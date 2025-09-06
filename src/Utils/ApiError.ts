@@ -6,9 +6,8 @@ export class apiError extends Error {
 
   constructor(
     statusCode: number,
-    stack: string,
     message: string = "Something Went Wrong",
-    success: boolean
+    stack?: string, 
   ) {
     super(message);
     (this.statusCode = statusCode),

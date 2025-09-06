@@ -4,8 +4,7 @@ export class apiResponse {
   data: Record<string, any>;
   message: string;
   constructor(
-    statusCode: number,
-    success: boolean,
+    statusCode: number, 
     data: Record<string, any>,
     message: string = "Successfull"
   ) {

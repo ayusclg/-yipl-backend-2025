@@ -13,6 +13,8 @@ model Authors{
   id  String @id @default(uuid())
   name String 
   email String @unique
+  password String
+  profilePicture String
   createdAt DateTime @default(now())
 
 }
