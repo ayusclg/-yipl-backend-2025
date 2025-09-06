@@ -6,7 +6,7 @@ import { Authors } from "@prisma/client";
 declare global{
     namespace Express{
         interface Request{
-            author?:Authors|string;
+            authorId?:string;
         }
     }
 }
@@ -33,9 +33,9 @@ export const verifyUser = async (req: Request, res: Response, next: NextFunction
             throw new apiError(404,"Author Not Found")
         }
 
-        req.author =author.id.toString()
+        req.authorId =author.id.toString()
         next()
     } catch (error) {
-        throw new apiError(401,"Invalid Token ")
+        throw new apiError(401,"Please Login")
     }
 }

@@ -200,4 +200,5 @@ const getAuthorById = asyncHandler(
         res.status(200).json(new apiResponse(200,authorFind,"Author Found Successfully"))
   }
 );
+    
 export { createAuthor, loginAuthor, getAllAuthor, getAuthorById };

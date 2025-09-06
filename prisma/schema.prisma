@@ -14,7 +14,7 @@ model Authors{
   name String 
   email String @unique
   password String
-  profilePicture String
+  profilePicture String?
   createdAt DateTime @default(now())
   books Books[]
    
@@ -26,6 +26,8 @@ model Books{
   title String
   isbn String
   publishedYear DateTime
+  coverImage String?
+  createdAt DateTime @default(now())
   author_id String
   author Authors @relation(fields: [author_id],references: [id])
 }
