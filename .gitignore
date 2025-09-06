@@ -34,3 +34,4 @@ Thumbs.db
 
 # Prisma migrations (optional – ignore if you don’t want them in git)
 /prisma/migrations/
+prisma/dev.db

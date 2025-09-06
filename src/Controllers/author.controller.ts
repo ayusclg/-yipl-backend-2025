@@ -1,3 +1,4 @@
+ 
 import { asyncHandler } from "../Utils/AsyncHandler";
 import { Request, Response } from "express";
 import { Authors } from "@prisma/client";
@@ -7,6 +8,7 @@ import bcrypt from "bcrypt";
 import { uploadImageToCloud } from "../Middlewares/Multer";
 import { apiResponse } from "../Utils/ApiRes";
 import { generateAccessToken, generateRefreshToken } from "../Utils/Token";
+import { setCacheOrGet } from "../Utils/Cache";
 
 const createAuthor = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
@@ -131,8 +133,8 @@ const getAllAuthor = asyncHandler(
         : {};
         const limit = perPage
         const skip = (page - 1) * perPage
-         
-        const authors = await prisma.authors.findMany({
+         const cacheKey = `authorId:${req.authorId}`
+        const authors =await setCacheOrGet( cacheKey,async()=>{return await prisma.authors.findMany({
             where,
             orderBy: {
                 books:{
@@ -154,7 +156,7 @@ const getAllAuthor = asyncHandler(
             },
             skip: skip,
             take:limit
-     })
+     })},500)
     if (authors.length < 1) {
       throw new apiError(404, "No Authors Found");
     }
@@ -171,29 +173,32 @@ const getAllAuthor = asyncHandler(
 );
 
 const getAuthorById = asyncHandler(
-  async (req: Request, res: Response): Promise<void> => {
-    const authorId = req.params.id;
-    if (!authorId) {
-      throw new apiError(404, "Author id not found");
-    }
-    const authorFind = await prisma.authors.findUnique({
-      where: {
-        id: authorId,
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        books: {
-          select: {
-            title: true,
-            isbn: true,
-            publishedYear: true,
-          },
-        },
-      },
-    });
-
+    async (req: Request, res: Response): Promise<void> => {
+        const authorId = req.params.id;
+        if (!authorId) {
+            throw new apiError(404, "Author id not found");
+        }
+        const cacheKey = `authorById:${req.authorId}`
+        const authorFind = await setCacheOrGet(cacheKey, async () => {
+            return prisma.authors.findUnique({
+                where: {
+                    id: authorId,
+                },
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    books: {
+                        select: {
+                            title: true,
+                            isbn: true,
+                            publishedYear: true,
+                        },
+                    },
+                },
+            });
+        },600);
+    
     if (!authorFind) {
       throw new apiError(404, "No Such Author found");
     }
@@ -202,3 +207,4 @@ const getAuthorById = asyncHandler(
 );
     
 export { createAuthor, loginAuthor, getAllAuthor, getAuthorById };
+ 

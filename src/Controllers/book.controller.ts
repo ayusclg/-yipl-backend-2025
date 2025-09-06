@@ -4,6 +4,7 @@ import { apiError } from "../Utils/ApiError";
 import { apiResponse } from "../Utils/ApiRes";
 import { asyncHandler } from "../Utils/AsyncHandler";
 import { Request, Response } from "express";
+import { redis, setCacheOrGet } from "../Utils/Cache";
 
 const postBook = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
@@ -76,6 +77,8 @@ const updateBookDetails = asyncHandler(
         },
       },
     });
+      await  redis.del(`getBooks:${req.authorId}`)
+       await redis.del(`getBooksById:${req.authorId}`)
     if (!findBook) {
       throw new apiError(404, "No Such Books Found");
     }
@@ -108,38 +111,43 @@ const getBooks = asyncHandler(
     } else {
       publishedYearFilter = undefined;
     }
-    const getBooks = await prisma.books.findMany({
-      where: {
-        OR: [
-          { title: isNaN(Number(filter)) ? filter : undefined },
-          {
-            author: !isNaN(Number(filter))
-              ? undefined
-              : {
-                  name: filter,
+        
+        
+        const cacheKey = `getBooks:${req.authorId}`
+        const getBooks = await setCacheOrGet(cacheKey, async () => {
+            return prisma.books.findMany({
+                where: {
+                    OR: [
+                        { title: isNaN(Number(filter)) ? filter : undefined },
+                        {
+                            author: !isNaN(Number(filter))
+                                ? undefined
+                                : {
+                                    name: filter,
+                                },
+                        },
+                        { publishedYear: publishedYearFilter },
+                    ],
                 },
-          },
-          { publishedYear: publishedYearFilter },
-        ],
-      },
-      include: {
-        author: {
-          select: {
-            id: true,
-            email: true,
-            name: true,
-            profilePicture: true,
-          },
-        },
-      },
-      orderBy: [
-        {
-          [sortOptions]: sortOrder,
-        },
-      ],
-      skip: skip,
-      take: limit,
-    });
+                include: {
+                    author: {
+                        select: {
+                            id: true,
+                            email: true,
+                            name: true,
+                            profilePicture: true,
+                        },
+                    },
+                },
+                orderBy: [
+                    {
+                        [sortOptions]: sortOrder,
+                    },
+                ],
+                skip: skip,
+                take: limit,
+            })
+        },600)
     if (getBooks.length < 1) {
       throw new apiError(404, "No Books Found");
     }
@@ -155,8 +163,8 @@ const getBookById = asyncHandler(
     if (!bookId) {
       throw new apiError(404, "Book Id Not Found");
     }
-
-    const findBook = await prisma.books.findUnique({
+    const cacheKey = `getBookById:${req.authorId}`
+    const findBook = await setCacheOrGet( cacheKey,async()=>{return prisma.books.findUnique({
       where: {
         id: bookId,
       },
@@ -170,7 +178,7 @@ const getBookById = asyncHandler(
           },
         },
       },
-    });
+    })},600);
     if (!findBook) {
       throw new apiError(404, "No Books Found");
     }
