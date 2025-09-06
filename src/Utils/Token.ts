@@ -19,7 +19,7 @@ export function generateRefreshToken(USER:Authors): string {
     },
     secret,
     {
-      expiresIn,
+      expiresIn:expiresIn || "30d",
     }
   );
 }
@@ -42,6 +42,6 @@ export function generateAccessToken(USER: Authors): string {
         name:USER.name
     },
         secret, {
-        expiresIn,
+        expiresIn:expiresIn || "1d",
     })
 }
