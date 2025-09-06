@@ -6,6 +6,8 @@ import cors, { CorsOptionsDelegate, CorsRequest } from 'cors'
 import { Request, Response, NextFunction } from 'express';
 import authorRoutes from './Routes/author.routes'
 import bookRoutes from './Routes/book.routes'
+import morgan from 'morgan';
+import { logger } from './Logger/logger';
 dotenv.config()
 
 
@@ -31,6 +33,11 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors(corsOptions))
+app.use(morgan("combined", {
+    stream: {
+        write:message =>logger.http(message.trim())
+    }
+}))
 
 app.use("/api", authorRoutes)
 app.use("/api",bookRoutes)
