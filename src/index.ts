@@ -3,7 +3,8 @@ import dotenv from 'dotenv'
 import { PrismaClient } from '@prisma/client';
 import cookieParser from 'cookie-parser';
 import cors, { CorsOptionsDelegate, CorsRequest } from 'cors'
-import { Request,Response,NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
+import authorRoutes from './Routes/author.routes'
 dotenv.config()
 
 
@@ -30,7 +31,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors(corsOptions))
 
-
+app.use("/api",authorRoutes)
 app.get("/", (req, res) => {
     res.send("Hi  this is libary management backend developed by Ayush Pandey")
 })

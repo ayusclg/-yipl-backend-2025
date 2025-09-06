@@ -16,5 +16,16 @@ model Authors{
   password String
   profilePicture String
   createdAt DateTime @default(now())
+  books Books[]
+   
 
+}
+ 
+model Books{
+  id Int @id @default(autoincrement())
+  title String
+  isbn String
+  publishedYear DateTime
+  author_id String
+  author Authors @relation(fields: [author_id],references: [id])
 }
