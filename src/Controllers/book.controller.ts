@@ -5,6 +5,7 @@ import { apiResponse } from "../Utils/ApiRes";
 import { asyncHandler } from "../Utils/AsyncHandler";
 import { Request, Response } from "express";
 import { redis, setCacheOrGet } from "../Utils/Cache";
+import { boolean } from "joi";
 
 const postBook = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
@@ -45,7 +46,7 @@ const postBook = asyncHandler(
 
 const updateBookDetails = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
-    const bookId = parseInt(req.params.id);
+    const bookId = req.params.id;
     const { title, isbn, publishedYear } = req.body;
     if (!bookId) {
       throw new apiError(404, "Book Id Not Found");
@@ -77,12 +78,12 @@ const updateBookDetails = asyncHandler(
         },
       },
     });
-      await  redis.del(`getBooks:${req.authorId}`)
-       await redis.del(`getBooksById:${req.authorId}`)
+      
     if (!findBook) {
       throw new apiError(404, "No Such Books Found");
     }
-
+    await redis.del(`getBooks:${req.authorId}`);
+    await redis.del(`getBooksById:${req.authorId}`);
     res
       .status(200)
       .json(new apiResponse(200, findBook, "Book Details Updated"));
@@ -91,7 +92,7 @@ const updateBookDetails = asyncHandler(
 
 const getBooks = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
-    const filter = (req.query.filter as string) || " ";
+    const filter = (req.query.filter as string);
     const sortOptions =
       (req.query.sortOption as "title" | "publishedYear" | "createdAt") ||
       "createdAt";
@@ -101,6 +102,7 @@ const getBooks = asyncHandler(
 
     const skip = (page - 1) * perPage;
     const limit = perPage;
+
     let publishedYearFilter;
     if (!isNaN(Number(filter))) {
       const year = Number(filter);
@@ -111,42 +113,40 @@ const getBooks = asyncHandler(
     } else {
       publishedYearFilter = undefined;
     }
-        
+
+    const conditions: any[] = [];
+      if (filter) {
+        conditions.push({ title: { contains: filter, mode: "insensitive" } });
+        conditions.push({
+          author: { name: { contains: filter, mode: "insensitive" } },
+        });
+      }
+      if (publishedYearFilter) {
+        conditions.push({ publishedYear: publishedYearFilter });
+      }
         
         const cacheKey = `getBooks:${req.authorId}`
         const getBooks = await setCacheOrGet(cacheKey, async () => {
             return prisma.books.findMany({
-                where: {
-                    OR: [
-                        { title: isNaN(Number(filter)) ? filter : undefined },
-                        {
-                            author: !isNaN(Number(filter))
-                                ? undefined
-                                : {
-                                    name: filter,
-                                },
-                        },
-                        { publishedYear: publishedYearFilter },
-                    ],
+              where: conditions.length > 0 ? { OR: conditions } : undefined,
+              include: {
+                author: {
+                  select: {
+                    id: true,
+                    email: true,
+                    name: true,
+                    profilePicture: true,
+                  },
                 },
-                include: {
-                    author: {
-                        select: {
-                            id: true,
-                            email: true,
-                            name: true,
-                            profilePicture: true,
-                        },
-                    },
+              },
+              orderBy: [
+                {
+                  [sortOptions]: sortOrder,
                 },
-                orderBy: [
-                    {
-                        [sortOptions]: sortOrder,
-                    },
-                ],
-                skip: skip,
-                take: limit,
-            })
+              ],
+              skip: skip,
+              take: limit,
+            });
         },600)
     if (getBooks.length < 1) {
       throw new apiError(404, "No Books Found");
@@ -159,7 +159,7 @@ const getBooks = asyncHandler(
 
 const getBookById = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
-    const bookId = parseInt(req.params.id);
+    const bookId =req.params.id;
     if (!bookId) {
       throw new apiError(404, "Book Id Not Found");
     }

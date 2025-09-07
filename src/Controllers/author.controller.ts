@@ -1,7 +1,7 @@
  
 import { asyncHandler } from "../Utils/AsyncHandler";
 import { Request, Response } from "express";
-import { Authors } from "@prisma/client";
+import { Author } from "../Utils/Interfaces";
 import { prisma } from "..";
 import { apiError } from "../Utils/ApiError";
 import bcrypt from "bcrypt";
@@ -12,7 +12,7 @@ import { setCacheOrGet } from "../Utils/Cache";
 
 const createAuthor = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
-    const { email, name, password }: Authors = req.body;
+    const { email, name, password }: Author = req.body;
 
     const userCheck = await prisma.authors.findFirst({
       where: {
@@ -65,7 +65,7 @@ const createAuthor = asyncHandler(
 
 const loginAuthor = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
-    const { email, password }: Authors = req.body;
+    const { email, password }: Author = req.body;
     const checkAuthor = await prisma.authors.findFirst({
       where: {
         email,
@@ -79,8 +79,8 @@ const loginAuthor = asyncHandler(
     if (!checkPassword) {
       throw new apiError(400, "Invalid Credentials");
     }
-    const accessToken = generateAccessToken(checkAuthor);
-    const refreshToken = generateRefreshToken(checkAuthor);
+    const accessToken = generateAccessToken(checkAuthor as Author);
+    const refreshToken = generateRefreshToken(checkAuthor as Author);
     if (!accessToken && !refreshToken) {
       throw new apiError(400, "Token Not Generated");
     }
