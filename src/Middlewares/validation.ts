@@ -1,10 +1,10 @@
-import { Authors, Books } from "@prisma/client";
+
 import { NextFunction, Request, Response } from "express";
 import Joi from "joi";
 import { apiError } from "../Utils/ApiError";
 import { title } from "process";
 
-const authorValidation = Joi.object<Authors>({
+const authorValidation = Joi.object({
   name: Joi.string().min(4).max(20).required(),
   email: Joi.string().email().required(),
   password: Joi.string()
@@ -32,7 +32,7 @@ export const authorValidate = async (
   }
 };
 
-const bookValidation = Joi.object<Books>({
+const bookValidation = Joi.object({
   title: Joi.string().min(3).max(20).required(),
   isbn: Joi.string()
     .pattern(/^[0-9]{10}$/)

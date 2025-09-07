@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import Jwt, { JwtPayload } from "jsonwebtoken";
 import { prisma } from ".."; 
 import { apiError } from "../Utils/ApiError";
-import { Authors } from "@prisma/client";
+
 declare global{
     namespace Express{
         interface Request{

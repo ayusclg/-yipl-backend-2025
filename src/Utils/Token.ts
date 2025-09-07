@@ -1,8 +1,9 @@
-import { Authors } from "@prisma/client";
+
 import Jwt from "jsonwebtoken";
+import { Author } from "./Interfaces";
  
 
-export function generateRefreshToken(USER:Authors): string {
+export function generateRefreshToken(USER:Author): string {
     const secret = process.env.REFRESH_TOKEN_SECRET!;
     const expiry = process.env.REFRESH_TOKEN_EXPIRY;
     const expiresIn = Number(expiry);
@@ -24,7 +25,7 @@ export function generateRefreshToken(USER:Authors): string {
   );
 }
 
-export function generateAccessToken(USER: Authors): string {
+export function generateAccessToken(USER:Author): string {
     const secret = process.env.ACCESS_TOKEN_SECRET
     const expiry = process.env.ACCESS_TOKEN_EXPIRY
     const expiresIn = Number(expiry)
