@@ -22,7 +22,7 @@ model Authors{
 }
  
 model Books{
-  id Int @id @default(autoincrement())
+  id String @id @default(uuid())
   title String
   isbn String
   publishedYear DateTime
